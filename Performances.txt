@@ -1,0 +1,229 @@
+V1 : Tri Secondaire "In-Memory" (côté Reduce)
+
+======================================================================
+🚀 ÉTAPE 1 : Test avec 100 arêtes
+======================================================================
+📊 Graphe chargé : 74 nœuds | 100 arêtes
+
+⏳ Lancement SANS Secondary Sort...
+
+
+✅ Terminé en 9.79s | Delta RAM: +188.65 Mo
+
+⏳ Lancement AVEC Secondary Sort...
+
+
+✅ Terminé en 6.10s | Delta RAM: +38.43 Mo
+
+🏆 BILAN ÉTAPE 1 :
+   ⏱️ Temps : Le Secondary Sort est plus rapide de 3.69s (Speedup: 1.60x)
+   💾 RAM   : Sans SS = +188.65 Mo | Avec SS = +38.43 Mo
+
+======================================================================
+🚀 ÉTAPE 2 : Test avec 5000 arêtes
+======================================================================
+📊 Graphe chargé : 2117 nœuds | 5000 arêtes
+
+⏳ Lancement SANS Secondary Sort...
+
+✅ Terminé en 7.70s | Delta RAM: +1.60 Mo
+
+⏳ Lancement AVEC Secondary Sort...
+
+
+✅ Terminé en 9.28s | Delta RAM: -5.64 Mo
+
+🏆 BILAN ÉTAPE 2 :
+   ⏱️ Temps : Le Secondary Sort est plus lent de 1.58s (Speedup: 0.83x)
+   💾 RAM   : Sans SS = +1.60 Mo | Avec SS = -5.64 Mo
+
+======================================================================
+🚀 ÉTAPE 3 : Test avec 50000 arêtes
+======================================================================
+📊 Graphe chargé : 21163 nœuds | 50000 arêtes
+
+⏳ Lancement SANS Secondary Sort...
+
+✅ Terminé en 21.98s | Delta RAM: -5.89 Mo
+
+⏳ Lancement AVEC Secondary Sort...
+
+
+✅ Terminé en 23.78s | Delta RAM: +19.20 Mo
+
+🏆 BILAN ÉTAPE 3 :
+   ⏱️ Temps : Le Secondary Sort est plus lent de 1.80s (Speedup: 0.92x)
+   💾 RAM   : Sans SS = -5.89 Mo | Avec SS = +19.20 Mo
+
+======================================================================
+🚀 ÉTAPE 4 : Test avec 250000 arêtes
+======================================================================
+📊 Graphe chargé : 88173 nœuds | 250000 arêtes
+
+⏳ Lancement SANS Secondary Sort...
+
+✅ Terminé en 339.53s | Delta RAM: -78.48 Mo
+
+⏳ Lancement AVEC Secondary Sort...
+
+
+✅ Terminé en 346.99s | Delta RAM: +8.18 Mo
+
+🏆 BILAN ÉTAPE 4 :
+   ⏱️ Temps : Le Secondary Sort est plus lent de 7.46s (Speedup: 0.98x)
+   💾 RAM   : Sans SS = -78.48 Mo | Avec SS = +8.18 Mo
+
+======================================================================
+🚀 ÉTAPE 5 : Test avec TOUTES les arêtes
+======================================================================
+📊 Graphe chargé : 875713 nœuds | 5105039 arêtes
+
+⏳ Lancement SANS Secondary Sort...
+
+Plus d’une heure… (STOPPER)
+
+PROBLEME identifié : ce n’est pas l’algorithme qui est super lent, car les itérations s’enchainent assez vite (en tout cas relativement à la taille du graphe), mais c’est la faute de networkx : NetworkX est monocœur et extrêmement gourmand en RAM (environ 5 à 10 fois le poids du fichier brut). Pour 5 millions d'arêtes, il sature probablement déjà le driver Colab avant même que Spark ne commence à travailler.
+Actuellement, on fais : Fichier TXT -> NetworkX -> RDD. 
+Solution : retirer complètement Networkx, on laisse Spark gérer le flux de données !
+
+V2 : même chose sans utiliser Networkx
+Pourquoi c'est mieux :
+1.	Mémoire : On ne stocke plus d'objet nx.DiGraph. On ne manipule que des RDD, que Spark peut décharger sur le disque si la RAM manque.
+2.	Vitesse : sc.textFile est parallélisé nativement.
+3.	Stabilité : J'ai ajouté .cache() après chaque passe dans forward_pass. C'est l'étape cruciale : sans cela, à l'itération 10, Spark recalcule 10 fois le début de l'algorithme.
+Note : utilisation de unpersist() pour libérer la RAM à chaque fin d’étape
+
+======================================================================
+🚀 ÉTAPE 1 : 100 arêtes
+======================================================================
+📊 RDD prêt : 100 arêtes
+
+⏳ Test SANS Secondary Sort...
+✅ Terminé en 3.67s | Delta RAM: -75.93 Mo
+
+⏳ Test AVEC Secondary Sort...
+✅ Terminé en 3.21s | Delta RAM: -36.30 Mo
+
+======================================================================
+🚀 ÉTAPE 2 : 5000 arêtes
+======================================================================
+📊 RDD prêt : 5000 arêtes
+
+⏳ Test SANS Secondary Sort...
+✅ Terminé en 7.24s | Delta RAM: -362.81 Mo
+
+⏳ Test AVEC Secondary Sort...
+✅ Terminé en 6.10s | Delta RAM: -71.01 Mo
+
+======================================================================
+🚀 ÉTAPE 3 : 50000 arêtes
+======================================================================
+📊 RDD prêt : 50000 arêtes
+
+⏳ Test SANS Secondary Sort...
+✅ Terminé en 11.63s | Delta RAM: -137.27 Mo
+
+⏳ Test AVEC Secondary Sort...
+✅ Terminé en 11.76s | Delta RAM: +6.50 Mo
+
+======================================================================
+🚀 ÉTAPE 4 : 250000 arêtes
+======================================================================
+📊 RDD prêt : 250000 arêtes
+
+⏳ Test SANS Secondary Sort...
+✅ Terminé en 27.83s | Delta RAM: +1.29 Mo
+
+⏳ Test AVEC Secondary Sort...
+✅ Terminé en 26.30s | Delta RAM: +3.34 Mo
+
+======================================================================
+🚀 ÉTAPE 5 : FULL arêtes
+======================================================================
+📊 RDD prêt : 5105039 arêtes
+
+⏳ Test SANS Secondary Sort...
+✅ Terminé en 263.69s | Delta RAM: +239.16 Mo
+
+⏳ Test AVEC Secondary Sort...
+✅ Terminé en 282.47s | Delta RAM: +281.51 Mo
+
+
+Pourquoi le Secondary Sort est-il plus lent ici ?
+Il y a deux raisons techniques probables :
+1.	Le coût du sorted(list(values)) : Dans le dataset web-Google, la plupart des nœuds ont peu de voisins, mais quelques "hubs" en ont énormément. Convertir un itérateur Spark en liste Python pour la trier consomme beaucoup de CPU et de RAM. Si la liste est déjà presque triée ou très courte, l'overhead du tri est plus lourd que le gain.
+2.	La sérialisation Python/Java : Le tri se passe côté Python. Faire transiter de gros volumes de données entre la JVM (Spark) et Python pour les trier ralentit l'exécution
+•  L'overhead de la liste : values est un itérateur. En faisant list(values), tu forces Spark à charger tous les voisins d'un nœud en mémoire Python d'un coup.
+•  Le coût du tri : Python utilise Timsort ($O(n \log n)$). Si un nœud est un énorme "hub" (ce qui arrive dans les graphes du web), trier 100 000 voisins en Python est plus lent que de simplement les parcourir deux fois comme dans ta version "Sans SS".
+
+V3 : shuffle natif de Spark
+
+======================================================================
+🚀 ÉTAPE 1 : 100 arêtes
+======================================================================
+📊 RDD chargé : 100 arêtes
+
+⏳ Lancement : Standard (Sans Secondary Sort)...
+✅ BASE terminé en 4.94s | Delta RAM: +29.66 Mo
+
+⏳ Lancement : In-Memory Sort...
+✅ SS terminé en 7.12s | Delta RAM: +59.02 Mo
+
+⏳ Lancement : Shuffle Sort...
+✅ SHUFFLE terminé en 4.96s | Delta RAM: -0.57 Mo
+
+======================================================================
+🚀 ÉTAPE 2 : 5000 arêtes
+======================================================================
+📊 RDD chargé : 5000 arêtes
+
+⏳ Lancement : Standard (Sans Secondary Sort)...
+✅ BASE terminé en 8.13s | Delta RAM: +7.29 Mo
+
+⏳ Lancement : In-Memory Sort...
+✅ SS terminé en 6.10s | Delta RAM: +0.61 Mo
+
+⏳ Lancement : Shuffle Sort...
+✅ SHUFFLE terminé en 9.47s | Delta RAM: +30.29 Mo
+
+======================================================================
+🚀 ÉTAPE 3 : 50000 arêtes
+======================================================================
+📊 RDD chargé : 50000 arêtes
+
+⏳ Lancement : Standard (Sans Secondary Sort)...
+✅ BASE terminé en 14.62s | Delta RAM: +31.53 Mo
+
+⏳ Lancement : In-Memory Sort...
+✅ SS terminé en 15.10s | Delta RAM: +81.55 Mo
+
+⏳ Lancement : Shuffle Sort...
+✅ SHUFFLE terminé en 18.32s | Delta RAM: +4.81 Mo
+
+======================================================================
+🚀 ÉTAPE 4 : 250000 arêtes
+======================================================================
+📊 RDD chargé : 250000 arêtes
+
+⏳ Lancement : Standard (Sans Secondary Sort)...
+✅ BASE terminé en 27.83s | Delta RAM: +46.20 Mo
+
+⏳ Lancement : In-Memory Sort...
+✅ SS terminé en 26.10s | Delta RAM: -8.92 Mo
+
+⏳ Lancement : Shuffle Sort...
+✅ SHUFFLE terminé en 35.63s | Delta RAM: -72.32 Mo
+
+======================================================================
+🚀 ÉTAPE 5 : FULL arêtes
+======================================================================
+📊 RDD chargé : 5105039 arêtes
+
+⏳ Lancement : Standard (Sans Secondary Sort)...
+✅ BASE terminé en 266.65s | Delta RAM: +182.16 Mo
+
+⏳ Lancement : In-Memory Sort...
+✅ SS terminé en 270.56s | Delta RAM: +178.07 Mo
+
+⏳ Lancement : Shuffle Sort...
+✅ SHUFFLE terminé en 413.15s | Delta RAM: +57.61 Mo
