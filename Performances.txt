@@ -226,5 +226,29 @@ V3 : shuffle natif de Spark
 ✅ SS terminé en 270.56s | Delta RAM: +178.07 Mo
 
 ⏳ Lancement : Shuffle Sort...
->>>>>>> Stashed changes
 ✅ SHUFFLE terminé en 413.15s | Delta RAM: +57.61 Mo
+
+
+
+
+Test dataset énorme (1.8 milliards d'arêtes) : Friendster dataset
+
+Utiliser cette référence dans le rapport :
+
+@inproceedings{nr,
+     title={The Network Data Repository with Interactive Graph Analytics and Visualization},
+     author={Ryan A. Rossi and Nesreen K. Ahmed},
+     booktitle={AAAI},
+     url={https://networkrepository.com},
+     year={2015}
+}
+
+Origine et Contexte du Dataset Friendster:
+
+Le dataset Friendster est issu de l'un des pionniers des réseaux sociaux, fondé en 2002 (avant Facebook). En 2011, alors que le site déclinait, une équipe de chercheurs et d'archivistes (The Internet Archive) a procédé à un "crawl" massif du réseau avant sa transformation en plateforme de jeux.
+
+Nature des données : Il s'agit d'un graphe non-orienté représentant les liens d'amitié explicites entre les utilisateurs.
+
+Échelle : Le jeu de données complet contient environ 65 millions de nœuds et 1,8 milliard d'arêtes.
+
+Intérêt pour le Big Data : Contrairement au graphe Web-Google qui est un graphe de liens hypertextes, Friendster est un réseau social "petit monde" (Small World). Il est caractérisé par une distribution en loi de puissance très marquée : certains nœuds (les "hubs") possèdent un nombre de voisins colossal, ce qui en fait le benchmark idéal pour tester la résistance d'un algorithme aux biais de partitions et aux débordements de mémoire (OOM).
