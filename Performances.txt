@@ -226,4 +226,5 @@ V3 : shuffle natif de Spark
 ✅ SS terminé en 270.56s | Delta RAM: +178.07 Mo
 
 ⏳ Lancement : Shuffle Sort...
+>>>>>>> Stashed changes
 ✅ SHUFFLE terminé en 413.15s | Delta RAM: +57.61 Mo
